@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCQ Test Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Full height of the viewport */
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .showcase {
+            flex: 1; /* Allow the showcase to grow and fill the available space */
+            width: 90%;
+            max-width: 600px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+            min-height: 150px;
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+        .showcase p {
+            margin: 5px 0;
+            font-size: 1.2em;
+        }
+        .button-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 90%;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+        .button-container button {
+            font-size: 1.5em;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+        .num-button {
+            background-color: #333;
+        }
+        .green {
+            background-color: #4caf50;
+        }
+        .yellow {
+            background-color: #ff9800;
+        }
+        .red {
+            background-color: #f44336;
+        }
+        .blue {
+            background-color: #2196f3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="showcase" id="showcase">
+    <p>Total: 0</p>
+    <p id="currentSelection">Current Selection: None</p>
+</div>
+
+<div class="button-container">
+    <button class="blue" style="grid-column: 1 / span 1;" onclick="deleteNumber()">Delete</button>
+    <button class="red" style="grid-column: 2 / span 1;" onclick="calculateResult()">Submit</button>
+    <button class="num-button" style="grid-column: 1 / span 1;" onclick="addNumber('1')">1</button>
+    <button class="num-button" onclick="addNumber('2')">2</button>
+    <button class="num-button" onclick="addNumber('3')">3</button>
+    <button class="num-button" onclick="addNumber('4')">4</button>
+    <button class="num-button" onclick="addNumber('5')">5</button>
+    <button class="num-button" onclick="addNumber('6')">6</button>
+    <button class="num-button" onclick="addNumber('7')">7</button>
+    <button class="num-button" onclick="addNumber('8')">8</button>
+    <button class="num-button" onclick="addNumber('9')">9</button>
+    <button class="num-button" style="grid-column: 1 / span 1;" onclick="addNumber('0')">0</button>
+    <button class="yellow" style="grid-column: 2 / span 1;" onclick="markWrong()" id="wrongBtn" disabled>Wrong</button>
+    <button class="green" style="grid-column: 3 / span 1;" onclick="markCorrect()" id="correctBtn" disabled>Correct</button>
+</div>
+
+<script>
+    let answers = [];
+    let currentNumber = '';
+    let timer;
+    let startTime;
+
+    function addNumber(num) {
+        currentNumber += num;
+        document.getElementById("currentSelection").innerText = `Current Selection: ${currentNumber}`;
+        toggleMarkButtons(true);
+        
+        // Start the timer if it's not already running
+        if (!startTime) {
+            startTime = Date.now();
+            timer = setInterval(updateTimer, 1000); // Update timer every second
+        }
+    }
+
+    function updateTimer() {
+        // This function runs every second to keep track of the time
+    }
+
+    function deleteNumber() {
+        if (currentNumber) {
+            currentNumber = currentNumber.slice(0, -1);
+            document.getElementById("currentSelection").innerText = currentNumber ? `Current Selection: ${currentNumber}` : `Current Selection: None`;
+        } else {
+            if (answers.length > 0) {
+                answers.pop();
+                updateShowcase();
+            }
+        }
+        toggleMarkButtons(currentNumber.length > 0);
+    }
+
+    function markCorrect() {
+        if (currentNumber) {
+            answers.push({ number: currentNumber, correct: true });
+            updateShowcase();
+            resetCurrentNumber();
+        }
+    }
+
+    function markWrong() {
+        if (currentNumber) {
+            answers.push({ number: currentNumber, correct: false });
+            updateShowcase();
+            resetCurrentNumber();
+        }
+    }
+
+    function updateShowcase() {
+        const showcase = document.getElementById('showcase');
+        showcase.innerHTML = `<p>Total: ${answers.length}</p><p id="currentSelection">Current Selection: None</p>`;
+        answers.forEach((answer) => {
+            const color = answer.correct ? 'green' : 'red';
+            const status = answer.correct ? 'Correct' : 'Wrong';
+            showcase.innerHTML += `<p style="background-color: ${color}; color: white; padding: 5px; border-radius: 5px;">${answer.number} => ${status}</p>`;
+        });
+        showcase.scrollTop = showcase.scrollHeight;
+    }
+
+    function calculateResult() {
+        const total = answers.length;
+        const correctAnswers = answers.filter(answer => answer.correct).length;
+        const wrongAnswers = total - correctAnswers;
+
+        // Stop the timer and calculate the total time taken
+        const endTime = Date.now();
+        const totalTime = Math.floor((endTime - startTime) / 1000); // Total time in seconds
+        clearInterval(timer); // Clear the timer
+
+        const score = correctAnswers - wrongAnswers * 0.5;
+        alert(`Total: ${total}\nCorrect Answers: ${correctAnswers}\nWrong Answers: ${wrongAnswers}\nObtained Marks: ${score}\nTotal Time: ${totalTime} seconds`);
+    }
+
+    function resetTest() {
+        answers = [];
+        resetCurrentNumber();
+        updateShowcase();
+        clearInterval(timer); // Clear the timer if reset
+        startTime = null; // Reset the start time
+    }
+
+    function resetCurrentNumber() {
+        currentNumber = '';
+        document.getElementById("currentSelection").innerText = `Current Selection: None`;
+        toggleMarkButtons(false);
+    }
+
+    function toggleMarkButtons(enable) {
+        document.getElementById("wrongBtn").disabled = !enable;
+        document.getElementById("correctBtn").disabled = !enable;
+    }
+</script>
+
+</body>
+</html>
